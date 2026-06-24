@@ -1,0 +1,20 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# production
+/.next/
+/out/
+
+# env files
+.env*.local
+
+# debug
+npm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+package-lock.json
