@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 
 interface Props {
   onSend: (text: string) => void;
@@ -10,6 +10,15 @@ interface Props {
 
 export function InputBar({ onSend, disabled = false, placeholder = 'Type a message...' }: Props) {
   const [value, setValue] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Re-focus the textbox once a response finishes (disabled flips back to
+  // false) so the user can keep typing without clicking back into it.
+  useEffect(() => {
+    if (!disabled) {
+      textareaRef.current?.focus();
+    }
+  }, [disabled]);
 
   function submit() {
     const trimmed = value.trim();
@@ -29,6 +38,7 @@ export function InputBar({ onSend, disabled = false, placeholder = 'Type a messa
     <div className="px-4 py-3 bg-white border-t border-rose-100">
       <div className="flex items-end gap-3 bg-rose-50 rounded-2xl px-4 py-3 border border-rose-100">
         <textarea
+          ref={textareaRef}
           className="flex-1 bg-transparent resize-none text-sm text-gray-800 placeholder-gray-400 outline-none max-h-32 leading-relaxed"
           rows={1}
           value={value}
