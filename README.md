@@ -128,33 +128,59 @@ All runtime state is managed by `useChat` (`src/hooks/useChat.ts`).
 | `phase` | `ChatPhase` | Current session phase |
 | `recommendations` | `RecommendationResult[]` | Products returned on completion |
 | `isLoading` | `boolean` | True while an API request is in-flight |
-| `sessionId` | `string` (ref) | Stable UUID for the lifetime of the session |
+| `sessionId` | `string` (ref) | UUID persisted in `sessionStorage` — survives page refresh, resets on `restart()` |
 
 ### Phase Transitions
 
-```
-collecting --> questioning --> processing --> done
-                                          \-> error
+```mermaid
+stateDiagram-v2
+    [*] --> collecting
+
+    collecting --> collecting : static profile question pending
+    collecting --> questioning : profile complete --> graph run --> pending questions
+    collecting --> done : profile complete --> graph run --> recommendations ready
+    collecting --> error : graph run throws
+
+    questioning --> questioning : more pending questions
+    questioning --> done : all answered --> graph run --> recommendations ready
+    questioning --> error : graph run throws
+
+    done --> collecting : next message (server starts a new session)
+    error --> collecting : next message (server starts a new session)
 ```
 
-The backend drives phase transitions. Each API response carries a `phase` field that the hook applies to local state. The view layer uses `phase` to conditionally render the typing indicator, recommendation cards, and the "New search" control.
+The backend drives phase transitions — each API response carries a `phase` field that the hook applies to local state. `'processing'` exists in the `ChatPhase` type but the backend never actually returns it in a response (`chatService.ts` only ever resolves to `collecting`/`questioning`/`done`/`error` before replying); the loading UI is driven entirely by the client-side `isLoading` flag instead. `phase === 'done'` conditionally renders the "New search" button and changes the input placeholder. Reaching `done` or `error` isn't a dead end — sending another message from either phase causes the backend to transparently start a new session and reply with `phase: 'collecting'`, without the client needing to call `restart()` first.
 
 ### Data Flow
 
-```
-page.tsx
-  └── useChat (hook)
-        ├── sendMessage()
-        │     └── radianceClient.sendMessage()  [POST /api/chat]
-        │           └── ChatApiResponse
-        │                 ├── messages         --> appended to state
-        │                 ├── phase            --> replaces current phase
-        │                 └── recommendations  --> set in state
-        └── restart()
-              └── resets all state to initial values, generates new sessionId
+```mermaid
+flowchart TD
+    PAGE["page.tsx"] --> HOOK["useChat (hook)"]
+
+    HOOK --> INIT["On mount: getOrCreateSessionId()"]
+    INIT --> STORAGE{{"window.sessionStorage"}}
+    STORAGE -->|existing id found| REUSE["reuse stored sessionId"]
+    STORAGE -->|none found| CREATE["generate uuid --> persist to sessionStorage"]
+
+    HOOK --> SEND["sendMessage(text)"]
+    SEND --> APPENDU["append user ChatMessage to state"]
+    APPENDU --> CALL["radianceClient.sendMessage()<br/>POST /api/chat"]
+
+    CALL -->|2xx| RESP["ChatApiResponse"]
+    RESP --> M1["messages --> appended to state"]
+    RESP --> M2["phase --> replaces current phase"]
+    RESP --> M3["recommendations --> set in state"]
+
+    CALL -->|non-2xx| ERR["throws Error(body.error ?? 'HTTP status')"]
+    ERR --> CATCH["catch: append error message as assistant ChatMessage<br/>(phase left unchanged)"]
+
+    HOOK --> RESTART["restart()"]
+    RESTART --> NEWID["generate new sessionId"]
+    NEWID --> PERSIST["overwrite sessionStorage"]
+    PERSIST --> RESET["reset messages / phase / recommendations to initial values"]
 ```
 
-The hook initialises with a welcome `ChatMessage` from the assistant and `phase: 'collecting'`. The `sessionId` is created once per hook mount using `uuid` and held in a `useRef` to survive re-renders without triggering state updates.
+The hook initialises with a welcome `ChatMessage` from the assistant and `phase: 'collecting'`. The `sessionId` is read from `window.sessionStorage` on first mount (falling back to a freshly generated `uuid` if none is stored) and held in a `useRef` to survive re-renders without triggering state updates. Persisting it in `sessionStorage` means a page refresh resumes the same backend session instead of starting a new one; `restart()` generates a new ID and overwrites the stored value.
 
 ---
 
@@ -225,7 +251,7 @@ interface RecommendationResult {
 
 ### Error Handling
 
-`radianceClient.sendMessage()` throws if the HTTP response status is not in the 2xx range. `useChat` catches this, appends a user-facing error message to the chat, and sets `phase` to `'error'`.
+`radianceClient.sendMessage()` throws if the HTTP response status is not in the 2xx range. It attempts to parse the response body and use the backend's `error` field as the thrown message, falling back to a generic `HTTP <status>` string only if the body isn't valid JSON. `useChat` catches this and appends the error's message (or a generic fallback string if it isn't an `Error`) to the chat as an assistant message — `phase` is left unchanged, since the backend never got a chance to report one.
 
 ---
 
