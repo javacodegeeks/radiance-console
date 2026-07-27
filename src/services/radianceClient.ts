@@ -55,7 +55,11 @@ export async function sendMessage(req: ChatRequest): Promise<ChatApiResponse> {
   });
 
   if (!res.ok) {
-    throw new Error(`Radiance AI server responded with HTTP ${res.status}`);
+    // The backend returns a JSON body with a specific `error` message even on
+    // failure (see chatController.ts) — surface that instead of a generic
+    // HTTP status string, falling back only if the body can't be parsed.
+    const body = await res.json().catch(() => null) as { error?: string } | null;
+    throw new Error(body?.error ?? `Radiance AI server responded with HTTP ${res.status}`);
   }
 
   return res.json() as Promise<ChatApiResponse>;
