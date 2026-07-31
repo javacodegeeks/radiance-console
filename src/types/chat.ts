@@ -3,6 +3,7 @@
 export type {
   ChatMessage,
   RecommendationResult,
+  ExcludedProductResult,
   ChatPhase,
   ChatRequest,
   ChatApiResponse,

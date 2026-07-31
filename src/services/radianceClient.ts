@@ -27,6 +27,7 @@ export interface RecommendationResult {
   categories: string[];
   countryAvailability: string[];
   sourceUrl?: string;
+  imageUrl?: string;
   safetyStatus: 'safe' | 'caution' | 'unsafe';
   safetyNotes?: string;
   relevanceScore: number;
@@ -34,6 +35,12 @@ export interface RecommendationResult {
   relevanceToQuery?: string;
   reasoning?: string;
   usageTips?: string[];
+  confidence?: number;
+}
+
+export interface ExcludedProductResult {
+  name: string;
+  reason: string;
 }
 
 export type ChatPhase = 'collecting' | 'questioning' | 'processing' | 'done' | 'error';
@@ -42,6 +49,7 @@ export interface ChatApiResponse {
   messages: ChatMessage[];
   phase: ChatPhase;
   recommendations?: RecommendationResult[];
+  excludedProducts?: ExcludedProductResult[];
   error?: string;
 }
 

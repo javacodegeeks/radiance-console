@@ -4,16 +4,47 @@
 
 :root {
   --background: #fff1f2;
-  --foreground: #1c1917;
+  --foreground: #23211d;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* Smooth scroll in chat window */
 .chat-scroll {
   scroll-behavior: smooth;
+}
+
+/* Visible keyboard focus on interactive controls (not text inputs — those
+   get a focus-within border highlight on their container instead, see
+   InputBar.tsx) */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #e11d48;
+  outline-offset: 2px;
+}
+
+/* Safety stamp mount animation — one-shot, respects reduced motion below */
+@keyframes stamp-in {
+  0%   { transform: scale(1.35) rotate(-8deg); opacity: 0; }
+  100% { transform: scale(1)    rotate(-4deg); opacity: 1; }
+}
+
+.stamp {
+  animation: stamp-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .chat-scroll {
+    scroll-behavior: auto;
+  }
 }

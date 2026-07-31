@@ -35,11 +35,11 @@ export function InputBar({ onSend, disabled = false, placeholder = 'Type a messa
   }
 
   return (
-    <div className="px-4 py-3 bg-white border-t border-rose-100">
-      <div className="flex items-end gap-3 bg-rose-50 rounded-2xl px-4 py-3 border border-rose-100">
+    <div className="px-4 py-3 bg-paper border-t border-line">
+      <div className="flex items-end gap-3 bg-white rounded-xl px-4 py-3 border border-line focus-within:border-botanical-400 transition-colors">
         <textarea
           ref={textareaRef}
-          className="flex-1 bg-transparent resize-none text-sm text-gray-800 placeholder-gray-400 outline-none max-h-32 leading-relaxed"
+          className="flex-1 bg-transparent resize-none text-sm text-ink placeholder-ink/40 outline-none max-h-32 leading-relaxed"
           rows={1}
           value={value}
           onChange={e => setValue(e.target.value)}
@@ -50,15 +50,15 @@ export function InputBar({ onSend, disabled = false, placeholder = 'Type a messa
         <button
           onClick={submit}
           disabled={disabled || !value.trim()}
-          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-rose-500 text-white disabled:opacity-40 hover:bg-rose-600 transition-colors"
+          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-botanical-500 text-paper disabled:opacity-40 hover:bg-botanical-600 transition-colors"
           aria-label="Send"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <path d="M18.5 1.5L1 8.5l6.5 2.5m11-9.5L11 18.5l-3.5-7.5m11-9.5L7.5 11" />
           </svg>
         </button>
       </div>
-      <p className="text-xs text-gray-400 text-center mt-2">
+      <p className="text-xs text-ink/40 text-center mt-2 font-mono">
         Press Enter to send · Shift+Enter for new line
       </p>
     </div>

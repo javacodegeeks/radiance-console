@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { sendMessage as apiSendMessage } from '@/services/radianceClient';
-import type { ChatMessage, ChatPhase, RecommendationResult } from '@/services/radianceClient';
+import type { ChatMessage, ChatPhase, RecommendationResult, ExcludedProductResult } from '@/services/radianceClient';
 
 const WELCOME: ChatMessage = {
   id:        uuidv4(),
@@ -33,6 +33,7 @@ export function useChat() {
   const [messages,        setMessages]        = useState<ChatMessage[]>([WELCOME]);
   const [phase,           setPhase]           = useState<ChatPhase>('collecting');
   const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
+  const [excludedProducts, setExcludedProducts] = useState<ExcludedProductResult[]>([]);
   const [isLoading,       setIsLoading]       = useState(false);
   const sessionId = useRef<string>(getOrCreateSessionId());
 
@@ -54,6 +55,7 @@ export function useChat() {
       setPhase(data.phase);
       if (data.recommendations) {
         setRecommendations(data.recommendations);
+        setExcludedProducts(data.excludedProducts ?? []);
       }
     } catch (err) {
       setMessages(prev => [
@@ -82,7 +84,8 @@ export function useChat() {
     }]);
     setPhase('collecting');
     setRecommendations([]);
+    setExcludedProducts([]);
   }, []);
 
-  return { messages, phase, recommendations, isLoading, sendMessage, restart };
+  return { messages, phase, recommendations, excludedProducts, isLoading, sendMessage, restart };
 }
