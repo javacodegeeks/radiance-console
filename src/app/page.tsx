@@ -7,7 +7,7 @@ import { RecommendationCard } from '@/components/RecommendationCard';
 import { InputBar } from '@/components/InputBar';
 
 export default function Home() {
-  const { messages, phase, recommendations, excludedProducts, isLoading, sendMessage, restart } = useChat();
+  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function Home() {
         {/* Typing indicator */}
         {isLoading && (
           <div className="flex items-center gap-2 text-ink/50 text-sm pl-2 font-mono">
-            <span>Reading the label</span>
+            <span>{progressLabel ?? 'Reading the label'}</span>
             <span className="flex gap-1">
               <span className="w-1.5 h-1.5 bg-botanical-400 rounded-full animate-bounce [animation-delay:0ms]" />
               <span className="w-1.5 h-1.5 bg-botanical-400 rounded-full animate-bounce [animation-delay:150ms]" />
