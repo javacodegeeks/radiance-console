@@ -2,8 +2,21 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { sendMessage as apiSendMessage } from '@/services/radianceClient';
-import type { ChatMessage, ChatPhase, RecommendationResult } from '@/services/radianceClient';
+// Uses sendMessageStream() so the UI gets live per-step progress labels (see
+// progressLabel below) via SSE. To fall back to a single plain JSON response
+// with no progress events, the backend (chatController.ts) already supports
+// both — no server change needed. On the frontend, swap to sendMessage():
+//
+//   import { sendMessage } from '@/services/radianceClient';
+//   ...
+//   const data = await sendMessage({ sessionId: sessionId.current, message: text.trim() });
+//   // (drop the onProgress callback param entirely — sendMessage() takes
+//   // just the request object and returns the same ChatApiResponse shape)
+//
+// progressLabel will then just stay null the whole time, which is fine —
+// page.tsx already falls back to a static "Reading the label" string.
+import { sendMessageStream } from '@/services/radianceClient';
+import type { ChatMessage, ChatPhase, RecommendationResult, ExcludedProductResult } from '@/services/radianceClient';
 
 const WELCOME: ChatMessage = {
   id:        uuidv4(),
@@ -33,7 +46,9 @@ export function useChat() {
   const [messages,        setMessages]        = useState<ChatMessage[]>([WELCOME]);
   const [phase,           setPhase]           = useState<ChatPhase>('collecting');
   const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
+  const [excludedProducts, setExcludedProducts] = useState<ExcludedProductResult[]>([]);
   const [isLoading,       setIsLoading]       = useState(false);
+  const [progressLabel,   setProgressLabel]   = useState<string | null>(null);
   const sessionId = useRef<string>(getOrCreateSessionId());
 
   const sendMessage = useCallback(async (text: string) => {
@@ -47,13 +62,18 @@ export function useChat() {
     };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
+    setProgressLabel(null);
 
     try {
-      const data = await apiSendMessage({ sessionId: sessionId.current, message: text.trim() });
+      const data = await sendMessageStream(
+        { sessionId: sessionId.current, message: text.trim() },
+        label => setProgressLabel(label),
+      );
       setMessages(prev => [...prev, ...data.messages]);
       setPhase(data.phase);
       if (data.recommendations) {
         setRecommendations(data.recommendations);
+        setExcludedProducts(data.excludedProducts ?? []);
       }
     } catch (err) {
       setMessages(prev => [
@@ -67,6 +87,7 @@ export function useChat() {
       ]);
     } finally {
       setIsLoading(false);
+      setProgressLabel(null);
     }
   }, [isLoading]);
 
@@ -82,7 +103,9 @@ export function useChat() {
     }]);
     setPhase('collecting');
     setRecommendations([]);
+    setExcludedProducts([]);
+    setProgressLabel(null);
   }, []);
 
-  return { messages, phase, recommendations, isLoading, sendMessage, restart };
+  return { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart };
 }

@@ -7,7 +7,7 @@ import { RecommendationCard } from '@/components/RecommendationCard';
 import { InputBar } from '@/components/InputBar';
 
 export default function Home() {
-  const { messages, phase, recommendations, isLoading, sendMessage, restart } = useChat();
+  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -15,17 +15,17 @@ export default function Home() {
   }, [messages, recommendations, isLoading]);
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto">
+    <div className="flex flex-col h-screen max-w-6xl mx-auto bg-paper">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-rose-100 shadow-sm">
+      <header className="flex items-center justify-between px-6 py-4 bg-paper border-b border-line">
         <div>
-          <h1 className="text-xl font-semibold text-rose-600">Radiance AI</h1>
-          <p className="text-xs text-gray-400">Personalised cosmetic recommendations</p>
+          <h1 className="font-display text-xl font-bold text-ink tracking-tight">Radiance AI</h1>
+          <p className="text-[11px] font-mono uppercase tracking-wide text-botanical-500">Ingredient safety, reviewed</p>
         </div>
         {phase === 'done' && (
           <button
             onClick={restart}
-            className="text-sm text-rose-500 hover:text-rose-700 font-medium transition-colors"
+            className="text-sm text-botanical-500 hover:text-botanical-600 font-medium transition-colors"
           >
             New search
           </button>
@@ -40,12 +40,12 @@ export default function Home() {
 
         {/* Typing indicator */}
         {isLoading && (
-          <div className="flex items-center gap-2 text-gray-400 text-sm pl-2">
-            <span className="animate-pulse">Analysing</span>
+          <div className="flex items-center gap-2 text-ink/50 text-sm pl-2 font-mono">
+            <span>{progressLabel ?? 'Reading the label'}</span>
             <span className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce [animation-delay:0ms]" />
-              <span className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce [animation-delay:300ms]" />
+              <span className="w-1.5 h-1.5 bg-botanical-400 rounded-full animate-bounce [animation-delay:0ms]" />
+              <span className="w-1.5 h-1.5 bg-botanical-400 rounded-full animate-bounce [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 bg-botanical-400 rounded-full animate-bounce [animation-delay:300ms]" />
             </span>
           </div>
         )}
@@ -55,6 +55,18 @@ export default function Home() {
           <div className="space-y-3 pt-2">
             {recommendations.map((r, i) => (
               <RecommendationCard key={`${r.name}-${i}`} rec={r} rank={i + 1} />
+            ))}
+          </div>
+        )}
+
+        {/* Products the LLM considered but excluded as unsafe */}
+        {excludedProducts.length > 0 && (
+          <div className="border border-line rounded-lg p-4 space-y-2 bg-paper">
+            <p className="text-[11px] font-mono font-medium text-ink/40 uppercase tracking-widest">Not recommended</p>
+            {excludedProducts.map((p, i) => (
+              <p key={`${p.name}-${i}`} className="text-xs text-ink/60 leading-relaxed">
+                <span className="font-medium text-ink/80">{p.name}</span> — {p.reason}
+              </p>
             ))}
           </div>
         )}
