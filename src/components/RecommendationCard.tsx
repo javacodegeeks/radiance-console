@@ -1,9 +1,17 @@
+import { useState } from 'react';
 import type { RecommendationResult } from '@/services/radianceClient';
 
 interface Props {
   rec: RecommendationResult;
   rank: number;
 }
+
+const PLACEHOLDER_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 text-botanical-300" aria-hidden="true">
+    <path d="M9 2h6M10 2v4.2a2 2 0 0 1-.4 1.2L5.6 13a3 3 0 0 0-.6 1.8V19a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4.2a3 3 0 0 0-.6-1.8l-4-5.6a2 2 0 0 1-.4-1.2V2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7.5 14.5h9" strokeLinecap="round" />
+  </svg>
+);
 
 const SAFETY_STAMP: Record<RecommendationResult['safetyStatus'], { label: string; text: string; border: string }> = {
   safe:    { label: 'Safe',    text: 'text-safe',    border: 'border-safe'    },
@@ -13,42 +21,36 @@ const SAFETY_STAMP: Record<RecommendationResult['safetyStatus'], { label: string
 
 export function RecommendationCard({ rec, rank }: Props) {
   const stamp = SAFETY_STAMP[rec.safetyStatus];
+  const [imgFailed, setImgFailed] = useState(false);
+  const hasImage = Boolean(rec.imageUrl) && !imgFailed;
 
   return (
     <div className="bg-white border border-line rounded-lg p-4 space-y-3">
-      {/* Image — falls back to a default icon when the catalog has no product photo */}
-      <div className="-mx-4 -mt-4 mb-1 aspect-[4/3] bg-paper border-b border-line overflow-hidden rounded-t-lg flex items-center justify-center">
-        {rec.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- external, unpredictable OBF/OFF hosts; next/image would need a wildcard remotePatterns allowlist
-          <img
-            src={rec.imageUrl}
-            alt={rec.name}
-            className="w-full h-full object-contain"
-            loading="lazy"
-            onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-          />
-        ) : null}
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className={`w-10 h-10 text-botanical-300 ${rec.imageUrl ? 'hidden' : ''}`}
-          aria-hidden="true"
-        >
-          <path d="M9 2h6M10 2v4.2a2 2 0 0 1-.4 1.2L5.6 13a3 3 0 0 0-.6 1.8V19a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4.2a3 3 0 0 0-.6-1.8l-4-5.6a2 2 0 0 1-.4-1.2V2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M7.5 14.5h9" strokeLinecap="round" />
-        </svg>
-      </div>
-
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-mono uppercase tracking-widest text-botanical-500">
-            No. {String(rank).padStart(2, '0')}
-          </p>
-          <h3 className="font-display font-semibold text-ink text-sm mt-0.5">{rec.name}</h3>
-          <p className="text-xs font-mono uppercase tracking-wide text-ink/40 mt-0.5">{rec.brand}</p>
+        <div className="flex items-start gap-2.5">
+          {/* Same-size slot whether it's a real product photo or the placeholder icon */}
+          <div className="w-9 h-9 shrink-0 rounded-md bg-paper border border-line overflow-hidden flex items-center justify-center">
+            {hasImage ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external, unpredictable OBF/OFF hosts; next/image would need a wildcard remotePatterns allowlist
+              <img
+                src={rec.imageUrl}
+                alt={rec.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={() => setImgFailed(true)}
+              />
+            ) : (
+              PLACEHOLDER_ICON
+            )}
+          </div>
+          <div>
+            <p className="text-[11px] font-mono uppercase tracking-widest text-botanical-500">
+              No. {String(rank).padStart(2, '0')}
+            </p>
+            <h3 className="font-display font-semibold text-ink text-sm mt-0.5">{rec.name}</h3>
+            <p className="text-xs font-mono uppercase tracking-wide text-ink/40 mt-0.5">{rec.brand}</p>
+          </div>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <span
@@ -83,8 +85,8 @@ export function RecommendationCard({ rec, rank }: Props) {
         <div>
           <p className="text-[11px] font-mono font-medium text-botanical-500 uppercase tracking-widest mb-1">How to use</p>
           <ul className="space-y-1">
-            {rec.usageTips.map((tip, i) => (
-              <li key={i} className="text-sm text-ink/70 flex gap-2">
+            {rec.usageTips.map(tip => (
+              <li key={tip} className="text-sm text-ink/70 flex gap-2">
                 <span className="text-botanical-400 shrink-0 font-mono">{'>'}</span>
                 <span>{tip}</span>
               </li>
