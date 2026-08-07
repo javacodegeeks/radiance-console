@@ -1,18 +1,72 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { MessageBubble } from '@/components/MessageBubble';
+import RightRail from '@/components/RightRail';
 import { RecommendationCard } from '@/components/RecommendationCard';
 import { InputBar } from '@/components/InputBar';
 
 export default function Home() {
   const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart } = useChat();
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const selectedIndexRef = useRef<number>(0);
+  const mainRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollFrame = useRef<number | null>(null);
+
+  const idToIndex = useRef<Map<string, number>>(new Map());
+  idToIndex.current = new Map(messages.map((message, index) => [message.id, index]));
+
+  const updateSelectedIndex = useCallback((index: number) => {
+    selectedIndexRef.current = index;
+    setSelectedIndex(index);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (!mainRef.current) return;
+    if (scrollFrame.current !== null) {
+      cancelAnimationFrame(scrollFrame.current);
+    }
+
+    scrollFrame.current = requestAnimationFrame(() => {
+      const containerRect = mainRef.current!.getBoundingClientRect();
+      const nodes = Array.from(mainRef.current!.querySelectorAll<HTMLElement>('[data-message-id]'));
+      let bestIndex = selectedIndexRef.current;
+      let bestDistance = Infinity;
+
+      for (const node of nodes) {
+        const rect = node.getBoundingClientRect();
+        const distance = Math.abs(rect.bottom - containerRect.bottom);
+        if (rect.bottom <= containerRect.bottom && distance < bestDistance) {
+          const id = node.dataset.messageId;
+          const index = id ? idToIndex.current.get(id) : undefined;
+          if (typeof index === 'number') {
+            bestDistance = distance;
+            bestIndex = index;
+          }
+        }
+      }
+
+      if (bestIndex !== selectedIndexRef.current) {
+        updateSelectedIndex(bestIndex);
+      }
+    });
+  }, [updateSelectedIndex]);
 
   useEffect(() => {
+    const lastIndex = Math.max(0, messages.length - 1);
+    updateSelectedIndex(lastIndex);
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, recommendations, isLoading]);
+  }, [messages, recommendations, isLoading, updateSelectedIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrame.current !== null) {
+        cancelAnimationFrame(scrollFrame.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-screen max-w-6xl mx-auto bg-paper">
@@ -33,7 +87,11 @@ export default function Home() {
       </header>
 
       {/* Chat stream */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4 chat-scroll">
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-6 pr-24 space-y-4 chat-scroll"
+      >
         {messages.map(m => (
           <MessageBubble key={m.id} message={m} />
         ))}
@@ -73,6 +131,12 @@ export default function Home() {
 
         <div ref={bottomRef} />
       </main>
+
+      <RightRail
+        messages={messages}
+        selectedIndex={selectedIndex}
+        onSelect={updateSelectedIndex}
+      />
 
       {/* Input */}
       <InputBar

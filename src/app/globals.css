@@ -15,6 +15,12 @@ body {
 /* Smooth scroll in chat window */
 .chat-scroll {
   scroll-behavior: smooth;
+  /* hide native scrollbar since we provide a custom right-rail */
+  scrollbar-width: none; /* Firefox */
+}
+
+.chat-scroll::-webkit-scrollbar {
+  display: none; /* Webkit */
 }
 
 /* Visible keyboard focus on interactive controls (not text inputs — those
