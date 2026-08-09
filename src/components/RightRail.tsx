@@ -40,11 +40,11 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
   const shown = messages.slice(start, Math.min(end, start + MAX_MARKERS));
 
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-30 w-14 flex flex-col items-end gap-3">
+    <div className="group fixed right-6 top-1/2 -translate-y-1/2 z-30 w-14 flex flex-col items-end gap-3">
       <button
         aria-label="first"
         onClick={() => scrollTo(0)}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
       >
         <FaAngleDoubleUp className="text-ink/70" />
       </button>
@@ -52,7 +52,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="previous"
         onClick={prev}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
       >
         <FaChevronUp className="text-ink/70" />
       </button>
@@ -78,7 +78,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="next"
         onClick={next}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
       >
         <FaChevronDown className="text-ink/70" />
       </button>
@@ -86,7 +86,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="last"
         onClick={() => scrollTo(total - 1)}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
       >
         <FaAngleDoubleDown className="text-ink/70" />
       </button>
