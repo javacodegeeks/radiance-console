@@ -6,17 +6,15 @@ interface Props {
   messages: ChatMessage[];
   selectedIndex: number;
   onSelect: (index: number) => void;
+  onScrollTo: (index: number) => void;
 }
 
 const MAX_MARKERS = 50;
 
-export function RightRail({ messages, selectedIndex, onSelect }: Props) {
+export function RightRail({ messages, selectedIndex, onSelect, onScrollTo }: Props) {
   const scrollTo = (index: number) => {
     const boundedIndex = Math.max(0, Math.min(messages.length - 1, index));
-    const id = messages[boundedIndex]?.id;
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    onScrollTo(boundedIndex);
     onSelect(boundedIndex);
   };
 
@@ -44,7 +42,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="first"
         onClick={() => scrollTo(0)}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto transition-all duration-200"
       >
         <FaAngleDoubleUp className="text-ink/70" />
       </button>
@@ -52,7 +50,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="previous"
         onClick={prev}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto transition-all duration-200"
       >
         <FaChevronUp className="text-ink/70" />
       </button>
@@ -78,7 +76,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="next"
         onClick={next}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto transition-all duration-200"
       >
         <FaChevronDown className="text-ink/70" />
       </button>
@@ -86,7 +84,7 @@ export function RightRail({ messages, selectedIndex, onSelect }: Props) {
       <button
         aria-label="last"
         onClick={() => scrollTo(total - 1)}
-        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto transition-all duration-200"
+        className="w-6 h-6 rounded-md bg-white border border-line flex items-center justify-center shadow-sm hover:bg-ink/5 self-end opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto transition-all duration-200"
       >
         <FaAngleDoubleDown className="text-ink/70" />
       </button>

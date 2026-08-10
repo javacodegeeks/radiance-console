@@ -13,7 +13,8 @@ export default function Home() {
   const selectedIndexRef = useRef<number>(0);
   const mainRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollFrame = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const visibleEntriesRef = useRef<Map<string, IntersectionObserverEntry>>(new Map());
 
   const idToIndex = useRef<Map<string, number>>(new Map());
   idToIndex.current = new Map(messages.map((message, index) => [message.id, index]));
@@ -23,50 +24,78 @@ export default function Home() {
     setSelectedIndex(index);
   }, []);
 
-  const handleScroll = useCallback(() => {
-    if (!mainRef.current) return;
-    if (scrollFrame.current !== null) {
-      cancelAnimationFrame(scrollFrame.current);
+  const scrollToMessage = useCallback((index: number) => {
+    const boundedIndex = Math.max(0, Math.min(messages.length - 1, index));
+    const id = messages[boundedIndex]?.id;
+    const container = mainRef.current;
+    if (!id || !container) return;
+
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: boundedIndex === 0 ? 'start' : 'end',
+    });
+  }, [messages]);
+
+  const handleIntersections = useCallback((entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      const target = entry.target as HTMLElement;
+      const id = target.dataset.messageId;
+      if (!id) continue;
+
+      if (entry.isIntersecting) {
+        visibleEntriesRef.current.set(id, entry);
+      } else {
+        visibleEntriesRef.current.delete(id);
+      }
     }
 
-    scrollFrame.current = requestAnimationFrame(() => {
-      const containerRect = mainRef.current!.getBoundingClientRect();
-      const nodes = Array.from(mainRef.current!.querySelectorAll<HTMLElement>('[data-message-id]'));
-      let bestIndex = selectedIndexRef.current;
-      let bestDistance = Infinity;
+    if (!mainRef.current) return;
+    let bestIndex = selectedIndexRef.current;
+    let bestBottom = -Infinity;
 
-      for (const node of nodes) {
-        const rect = node.getBoundingClientRect();
-        const distance = Math.abs(rect.bottom - containerRect.bottom);
-        if (rect.bottom <= containerRect.bottom && distance < bestDistance) {
-          const id = node.dataset.messageId;
-          const index = id ? idToIndex.current.get(id) : undefined;
-          if (typeof index === 'number') {
-            bestDistance = distance;
-            bestIndex = index;
-          }
-        }
-      }
+    for (const entry of visibleEntriesRef.current.values()) {
+      const target = entry.target as HTMLElement;
+      const id = target.dataset.messageId;
+      const index = id ? idToIndex.current.get(id) : undefined;
+      if (typeof index !== 'number') continue;
 
-      if (bestIndex !== selectedIndexRef.current) {
-        updateSelectedIndex(bestIndex);
+      const rect = entry.boundingClientRect;
+      if (rect.bottom > bestBottom) {
+        bestBottom = rect.bottom;
+        bestIndex = index;
       }
-    });
+    }
+
+    if (bestIndex !== selectedIndexRef.current) {
+      updateSelectedIndex(bestIndex);
+    }
   }, [updateSelectedIndex]);
 
   useEffect(() => {
     const lastIndex = Math.max(0, messages.length - 1);
     updateSelectedIndex(lastIndex);
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, recommendations, isLoading, updateSelectedIndex]);
+  }, [messages, recommendations, updateSelectedIndex]);
 
   useEffect(() => {
+    if (!mainRef.current) return;
+    const observer = new IntersectionObserver(handleIntersections, {
+      root: mainRef.current,
+      threshold: [0, 0.25, 0.5, 0.75, 1],
+    });
+    observerRef.current = observer;
+
+    const nodes = Array.from(mainRef.current.querySelectorAll<HTMLElement>('[data-message-id]'));
+    nodes.forEach(node => observer.observe(node));
+
     return () => {
-      if (scrollFrame.current !== null) {
-        cancelAnimationFrame(scrollFrame.current);
-      }
+      observer.disconnect();
+      observerRef.current = null;
     };
-  }, []);
+  }, [messages, handleIntersections]);
 
   return (
     <div className="flex flex-col h-screen max-w-6xl mx-auto bg-paper">
@@ -89,7 +118,6 @@ export default function Home() {
       {/* Chat stream */}
       <main
         ref={mainRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-4 py-6 pr-24 space-y-4 chat-scroll"
       >
         {messages.map(m => (
@@ -136,6 +164,7 @@ export default function Home() {
         messages={messages}
         selectedIndex={selectedIndex}
         onSelect={updateSelectedIndex}
+        onScrollTo={scrollToMessage}
       />
 
       {/* Input */}
