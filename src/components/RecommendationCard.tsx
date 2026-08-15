@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { sendFeedback } from '@/services/radianceClient';
 import type { RecommendationResult } from '@/services/radianceClient';
 
 interface Props {
   rec: RecommendationResult;
   rank: number;
+  sessionId: string;
 }
 
 const PLACEHOLDER_ICON = (
@@ -19,10 +21,23 @@ const SAFETY_STAMP: Record<RecommendationResult['safetyStatus'], { label: string
   unsafe:  { label: 'Unsafe',  text: 'text-unsafe',  border: 'border-unsafe'  },
 };
 
-export function RecommendationCard({ rec, rank }: Props) {
+export function RecommendationCard({ rec, rank, sessionId }: Props) {
   const stamp = SAFETY_STAMP[rec.safetyStatus];
   const [imgFailed, setImgFailed] = useState(false);
   const hasImage = Boolean(rec.imageUrl) && !imgFailed;
+  const [rating, setRating] = useState<'up' | 'down' | null>(null);
+  const [feedbackError, setFeedbackError] = useState(false);
+
+  const submitRating = async (next: 'up' | 'down') => {
+    if (rating === next) return; // already recorded, avoid a redundant call
+    setRating(next);
+    setFeedbackError(false);
+    try {
+      await sendFeedback({ sessionId, productName: rec.name, brand: rec.brand, rating: next });
+    } catch {
+      setFeedbackError(true);
+    }
+  };
 
   return (
     <div className="bg-white border border-line rounded-lg p-4 space-y-3">
@@ -125,6 +140,35 @@ export function RecommendationCard({ rec, rank }: Props) {
             View product
           </a>
         )}
+
+        {/* Feedback — thumbs up/down, keyed on session + product (see feedbackController.ts) */}
+        <div className={`flex items-center gap-1.5 ${rec.sourceUrl ? '' : 'ml-auto'}`}>
+          <button
+            aria-label="Good recommendation"
+            aria-pressed={rating === 'up'}
+            onClick={() => submitRating('up')}
+            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${
+              rating === 'up' ? 'bg-botanical-500 border-botanical-500 text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
+            }`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M7.5 18.5h6.4a1.5 1.5 0 0 0 1.47-1.21l1.1-5.5A1.5 1.5 0 0 0 15 10H11.6l.6-3.1c.15-.75-.42-1.4-1.2-1.4-.4 0-.77.2-.98.55L7.5 9.5v9Zm-4-9h2v9h-2v-9Z" />
+            </svg>
+          </button>
+          <button
+            aria-label="Not a good recommendation"
+            aria-pressed={rating === 'down'}
+            onClick={() => submitRating('down')}
+            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${
+              rating === 'down' ? 'bg-unsafe border-unsafe text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
+            }`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M12.5 1.5H6.1a1.5 1.5 0 0 0-1.47 1.21l-1.1 5.5A1.5 1.5 0 0 0 5 10h3.4l-.6 3.1c-.15.75.42 1.4 1.2 1.4.4 0 .77-.2.98-.55L12.5 10.5v-9Zm4 9h-2v-9h2v9Z" />
+            </svg>
+          </button>
+          {feedbackError && <span className="text-[10px] text-unsafe">Couldn&apos;t save</span>}
+        </div>
       </div>
     </div>
   );

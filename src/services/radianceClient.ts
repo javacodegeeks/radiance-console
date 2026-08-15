@@ -136,3 +136,24 @@ export async function sendMessageStream(
 
   throw new Error('Radiance AI server closed the connection before sending a result.');
 }
+
+export interface FeedbackRequest {
+  sessionId: string;
+  productName: string;
+  brand: string;
+  rating: 'up' | 'down';
+}
+
+/** Records a thumbs up/down on a recommended product (see feedbackController.ts). */
+export async function sendFeedback(req: FeedbackRequest): Promise<void> {
+  const res = await fetch(`${API_URL}/api/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null;
+    throw new Error(body?.error ?? `Radiance AI server responded with HTTP ${res.status}`);
+  }
+}
