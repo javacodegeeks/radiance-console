@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { useChat } from '@/hooks/useChat';
-import { MessageBubble } from '@/components/MessageBubble';
-import RightRail from '@/components/RightRail';
-import { RecommendationCard } from '@/components/RecommendationCard';
 import { InputBar } from '@/components/InputBar';
+import { MessageBubble } from '@/components/MessageBubble';
+import { RecommendationCard } from '@/components/RecommendationCard';
+import RightRail from '@/components/RightRail';
+import { useChat } from '@/hooks/useChat';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function Home() {
   const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sessionId, sendMessage, restart } = useChat();

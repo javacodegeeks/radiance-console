@@ -1,6 +1,5 @@
-import React from 'react';
-import { FaAngleDoubleUp, FaChevronUp, FaChevronDown, FaAngleDoubleDown } from 'react-icons/fa';
 import type { ChatMessage } from '@/services/radianceClient';
+import { FaAngleDoubleDown, FaAngleDoubleUp, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 interface Props {
   messages: ChatMessage[];

@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { sendFeedback } from '@/services/radianceClient';
-import { FaBoxOpen } from 'react-icons/fa';
 import type { RecommendationResult } from '@/services/radianceClient';
+import { useState } from 'react';
+import { FaBoxOpen } from 'react-icons/fa';
 
 interface Props {
   rec: RecommendationResult;
@@ -10,9 +9,9 @@ interface Props {
 }
 
 const SAFETY_STAMP: Record<RecommendationResult['safetyStatus'], { label: string; text: string; border: string }> = {
-  safe:    { label: 'Safe',    text: 'text-safe',    border: 'border-safe'    },
+  safe: { label: 'Safe', text: 'text-safe', border: 'border-safe' },
   caution: { label: 'Caution', text: 'text-caution', border: 'border-caution' },
-  unsafe:  { label: 'Unsafe',  text: 'text-unsafe',  border: 'border-unsafe'  },
+  unsafe: { label: 'Unsafe', text: 'text-unsafe', border: 'border-unsafe' },
 };
 
 export function RecommendationCard({ rec, rank, sessionId }: Props) {
@@ -27,8 +26,8 @@ export function RecommendationCard({ rec, rank, sessionId }: Props) {
     setRating(next);
     setFeedbackError(false);
     try {
-      await 
-      ({ sessionId, productName: rec.name, brand: rec.brand, rating: next });
+      await
+        ({ sessionId, productName: rec.name, brand: rec.brand, rating: next });
     } catch {
       setFeedbackError(true);
     }
@@ -142,9 +141,8 @@ export function RecommendationCard({ rec, rank, sessionId }: Props) {
             aria-label="Good recommendation"
             aria-pressed={rating === 'up'}
             onClick={() => submitRating('up')}
-            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${
-              rating === 'up' ? 'bg-botanical-500 border-botanical-500 text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
-            }`}
+            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${rating === 'up' ? 'bg-botanical-500 border-botanical-500 text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
+              }`}
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
               <path d="M7.5 18.5h6.4a1.5 1.5 0 0 0 1.47-1.21l1.1-5.5A1.5 1.5 0 0 0 15 10H11.6l.6-3.1c.15-.75-.42-1.4-1.2-1.4-.4 0-.77.2-.98.55L7.5 9.5v9Zm-4-9h2v9h-2v-9Z" />
@@ -154,9 +152,8 @@ export function RecommendationCard({ rec, rank, sessionId }: Props) {
             aria-label="Not a good recommendation"
             aria-pressed={rating === 'down'}
             onClick={() => submitRating('down')}
-            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${
-              rating === 'down' ? 'bg-unsafe border-unsafe text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
-            }`}
+            className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${rating === 'down' ? 'bg-unsafe border-unsafe text-white' : 'border-line text-ink/40 hover:text-ink/70 hover:bg-paper'
+              }`}
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
               <path d="M12.5 1.5H6.1a1.5 1.5 0 0 0-1.47 1.21l-1.1 5.5A1.5 1.5 0 0 0 5 10h3.4l-.6 3.1c-.15.75.42 1.4 1.2 1.4.4 0 .77-.2.98-.55L12.5 10.5v-9Zm4 9h-2v-9h2v9Z" />
