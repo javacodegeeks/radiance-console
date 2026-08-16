@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { sendFeedback } from '@/services/radianceClient';
+import { FaBoxOpen } from 'react-icons/fa';
 import type { RecommendationResult } from '@/services/radianceClient';
 
 interface Props {
@@ -7,13 +8,6 @@ interface Props {
   rank: number;
   sessionId: string;
 }
-
-const PLACEHOLDER_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 text-botanical-300" aria-hidden="true">
-    <path d="M9 2h6M10 2v4.2a2 2 0 0 1-.4 1.2L5.6 13a3 3 0 0 0-.6 1.8V19a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4.2a3 3 0 0 0-.6-1.8l-4-5.6a2 2 0 0 1-.4-1.2V2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M7.5 14.5h9" strokeLinecap="round" />
-  </svg>
-);
 
 const SAFETY_STAMP: Record<RecommendationResult['safetyStatus'], { label: string; text: string; border: string }> = {
   safe:    { label: 'Safe',    text: 'text-safe',    border: 'border-safe'    },
@@ -33,7 +27,8 @@ export function RecommendationCard({ rec, rank, sessionId }: Props) {
     setRating(next);
     setFeedbackError(false);
     try {
-      await sendFeedback({ sessionId, productName: rec.name, brand: rec.brand, rating: next });
+      await 
+      ({ sessionId, productName: rec.name, brand: rec.brand, rating: next });
     } catch {
       setFeedbackError(true);
     }
@@ -56,7 +51,7 @@ export function RecommendationCard({ rec, rank, sessionId }: Props) {
                 onError={() => setImgFailed(true)}
               />
             ) : (
-              PLACEHOLDER_ICON
+              <FaBoxOpen className="w-5 h-5 text-botanical-300" aria-hidden="true" />
             )}
           </div>
           <div>
