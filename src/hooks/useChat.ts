@@ -107,5 +107,15 @@ export function useChat() {
     setProgressLabel(null);
   }, []);
 
-  return { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart };
+  return {
+    messages,
+    phase,
+    recommendations,
+    excludedProducts,
+    isLoading,
+    progressLabel,
+    sessionId: sessionId.current,
+    sendMessage,
+    restart,
+  };
 }

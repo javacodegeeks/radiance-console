@@ -1,14 +1,14 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { useChat } from '@/hooks/useChat';
-import { MessageBubble } from '@/components/MessageBubble';
-import RightRail from '@/components/RightRail';
-import { RecommendationCard } from '@/components/RecommendationCard';
 import { InputBar } from '@/components/InputBar';
+import { MessageBubble } from '@/components/MessageBubble';
+import { RecommendationCard } from '@/components/RecommendationCard';
+import RightRail from '@/components/RightRail';
+import { useChat } from '@/hooks/useChat';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function Home() {
-  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart } = useChat();
+  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sessionId, sendMessage, restart } = useChat();
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const selectedIndexRef = useRef<number>(0);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -140,7 +140,7 @@ export default function Home() {
         {recommendations.length > 0 && (
           <div className="space-y-3 pt-2">
             {recommendations.map((r, i) => (
-              <RecommendationCard key={`${r.name}-${i}`} rec={r} rank={i + 1} />
+              <RecommendationCard key={`${r.name}-${i}`} rec={r} rank={i + 1} sessionId={sessionId} />
             ))}
           </div>
         )}
