@@ -43,6 +43,13 @@ export interface ExcludedProductResult {
   reason: string;
 }
 
+/** AM/PM sequencing + interaction guidance for `recommendations` — see ai/src/agents/recommender.ts. */
+export interface Routine {
+  am: string[];
+  pm: string[];
+  interactionWarnings: string[];
+}
+
 export type ChatPhase = 'collecting' | 'questioning' | 'processing' | 'done' | 'error';
 
 export interface ChatApiResponse {
@@ -50,6 +57,7 @@ export interface ChatApiResponse {
   phase: ChatPhase;
   recommendations?: RecommendationResult[];
   excludedProducts?: ExcludedProductResult[];
+  routine?: Routine;
   error?: string;
 }
 
