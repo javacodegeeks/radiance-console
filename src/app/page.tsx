@@ -3,12 +3,13 @@
 import { InputBar } from '@/components/InputBar';
 import { MessageBubble } from '@/components/MessageBubble';
 import { RecommendationCard } from '@/components/RecommendationCard';
+import { RoutineCard } from '@/components/RoutineCard';
 import RightRail from '@/components/RightRail';
 import { useChat } from '@/hooks/useChat';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function Home() {
-  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sessionId, sendMessage, restart } = useChat();
+  const { messages, phase, recommendations, excludedProducts, routine, isLoading, progressLabel, sessionId, sendMessage, restart } = useChat();
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const selectedIndexRef = useRef<number>(0);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -144,6 +145,9 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        {/* AM/PM sequencing + interaction guidance for the recommendations above */}
+        {routine && <RoutineCard routine={routine} />}
 
         {/* Products the LLM considered but excluded as unsafe */}
         {excludedProducts.length > 0 && (
