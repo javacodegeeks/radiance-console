@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { FaPaperPlane } from 'react-icons/fa';
 
 interface Props {
   onSend: (text: string) => void;
@@ -53,9 +54,7 @@ export function InputBar({ onSend, disabled = false, placeholder = 'Type a messa
           className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-botanical-500 text-paper disabled:opacity-40 hover:bg-botanical-600 transition-colors"
           aria-label="Send"
         >
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-            <path d="M18.5 1.5L1 8.5l6.5 2.5m11-9.5L11 18.5l-3.5-7.5m11-9.5L7.5 11" />
-          </svg>
+          <FaPaperPlane className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
       <p className="text-xs text-ink/40 text-center mt-2 font-mono">

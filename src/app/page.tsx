@@ -1,18 +1,102 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { useChat } from '@/hooks/useChat';
+import { InputBar } from '@/components/InputBar';
 import { MessageBubble } from '@/components/MessageBubble';
 import { RecommendationCard } from '@/components/RecommendationCard';
-import { InputBar } from '@/components/InputBar';
+import { RoutineCard } from '@/components/RoutineCard';
+import RightRail from '@/components/RightRail';
+import { useChat } from '@/hooks/useChat';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function Home() {
-  const { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart } = useChat();
+  const { messages, phase, recommendations, excludedProducts, routine, isLoading, progressLabel, sessionId, sendMessage, restart } = useChat();
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const selectedIndexRef = useRef<number>(0);
+  const mainRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const visibleEntriesRef = useRef<Map<string, IntersectionObserverEntry>>(new Map());
+
+  const idToIndex = useRef<Map<string, number>>(new Map());
+  idToIndex.current = new Map(messages.map((message, index) => [message.id, index]));
+
+  const updateSelectedIndex = useCallback((index: number) => {
+    selectedIndexRef.current = index;
+    setSelectedIndex(index);
+  }, []);
+
+  const scrollToMessage = useCallback((index: number) => {
+    const boundedIndex = Math.max(0, Math.min(messages.length - 1, index));
+    const id = messages[boundedIndex]?.id;
+    const container = mainRef.current;
+    if (!id || !container) return;
+
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: boundedIndex === 0 ? 'start' : 'end',
+    });
+  }, [messages]);
+
+  const handleIntersections = useCallback((entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      const target = entry.target as HTMLElement;
+      const id = target.dataset.messageId;
+      if (!id) continue;
+
+      if (entry.isIntersecting) {
+        visibleEntriesRef.current.set(id, entry);
+      } else {
+        visibleEntriesRef.current.delete(id);
+      }
+    }
+
+    if (!mainRef.current) return;
+    let bestIndex = selectedIndexRef.current;
+    let bestBottom = -Infinity;
+
+    for (const entry of visibleEntriesRef.current.values()) {
+      const target = entry.target as HTMLElement;
+      const id = target.dataset.messageId;
+      const index = id ? idToIndex.current.get(id) : undefined;
+      if (typeof index !== 'number') continue;
+
+      const rect = entry.boundingClientRect;
+      if (rect.bottom > bestBottom) {
+        bestBottom = rect.bottom;
+        bestIndex = index;
+      }
+    }
+
+    if (bestIndex !== selectedIndexRef.current) {
+      updateSelectedIndex(bestIndex);
+    }
+  }, [updateSelectedIndex]);
 
   useEffect(() => {
+    const lastIndex = Math.max(0, messages.length - 1);
+    updateSelectedIndex(lastIndex);
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, recommendations, isLoading]);
+  }, [messages, recommendations, updateSelectedIndex]);
+
+  useEffect(() => {
+    if (!mainRef.current) return;
+    const observer = new IntersectionObserver(handleIntersections, {
+      root: mainRef.current,
+      threshold: [0, 0.25, 0.5, 0.75, 1],
+    });
+    observerRef.current = observer;
+
+    const nodes = Array.from(mainRef.current.querySelectorAll<HTMLElement>('[data-message-id]'));
+    nodes.forEach(node => observer.observe(node));
+
+    return () => {
+      observer.disconnect();
+      observerRef.current = null;
+    };
+  }, [messages, handleIntersections]);
 
   return (
     <div className="flex flex-col h-screen max-w-6xl mx-auto bg-paper">
@@ -33,7 +117,10 @@ export default function Home() {
       </header>
 
       {/* Chat stream */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4 chat-scroll">
+      <main
+        ref={mainRef}
+        className="flex-1 overflow-y-auto px-4 py-6 pr-24 space-y-4 chat-scroll"
+      >
         {messages.map(m => (
           <MessageBubble key={m.id} message={m} />
         ))}
@@ -54,10 +141,13 @@ export default function Home() {
         {recommendations.length > 0 && (
           <div className="space-y-3 pt-2">
             {recommendations.map((r, i) => (
-              <RecommendationCard key={`${r.name}-${i}`} rec={r} rank={i + 1} />
+              <RecommendationCard key={`${r.name}-${i}`} rec={r} rank={i + 1} sessionId={sessionId} />
             ))}
           </div>
         )}
+
+        {/* AM/PM sequencing + interaction guidance for the recommendations above */}
+        {routine && <RoutineCard routine={routine} />}
 
         {/* Products the LLM considered but excluded as unsafe */}
         {excludedProducts.length > 0 && (
@@ -73,6 +163,13 @@ export default function Home() {
 
         <div ref={bottomRef} />
       </main>
+
+      <RightRail
+        messages={messages}
+        selectedIndex={selectedIndex}
+        onSelect={updateSelectedIndex}
+        onScrollTo={scrollToMessage}
+      />
 
       {/* Input */}
       <InputBar

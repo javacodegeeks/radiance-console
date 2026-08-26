@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 // progressLabel will then just stay null the whole time, which is fine —
 // page.tsx already falls back to a static "Reading the label" string.
 import { sendMessageStream } from '@/services/radianceClient';
-import type { ChatMessage, ChatPhase, RecommendationResult, ExcludedProductResult } from '@/services/radianceClient';
+import type { ChatMessage, ChatPhase, RecommendationResult, ExcludedProductResult, Routine } from '@/services/radianceClient';
 
 const WELCOME: ChatMessage = {
   id:        uuidv4(),
@@ -47,6 +47,7 @@ export function useChat() {
   const [phase,           setPhase]           = useState<ChatPhase>('collecting');
   const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
   const [excludedProducts, setExcludedProducts] = useState<ExcludedProductResult[]>([]);
+  const [routine,         setRoutine]         = useState<Routine | null>(null);
   const [isLoading,       setIsLoading]       = useState(false);
   const [progressLabel,   setProgressLabel]   = useState<string | null>(null);
   const sessionId = useRef<string>(getOrCreateSessionId());
@@ -74,6 +75,7 @@ export function useChat() {
       if (data.recommendations) {
         setRecommendations(data.recommendations);
         setExcludedProducts(data.excludedProducts ?? []);
+        setRoutine(data.routine ?? null);
       }
     } catch (err) {
       setMessages(prev => [
@@ -104,8 +106,20 @@ export function useChat() {
     setPhase('collecting');
     setRecommendations([]);
     setExcludedProducts([]);
+    setRoutine(null);
     setProgressLabel(null);
   }, []);
 
-  return { messages, phase, recommendations, excludedProducts, isLoading, progressLabel, sendMessage, restart };
+  return {
+    messages,
+    phase,
+    recommendations,
+    excludedProducts,
+    routine,
+    isLoading,
+    progressLabel,
+    sessionId: sessionId.current,
+    sendMessage,
+    restart,
+  };
 }

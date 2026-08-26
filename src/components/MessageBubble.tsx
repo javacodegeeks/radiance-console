@@ -8,7 +8,7 @@ export function MessageBubble({ message }: Props) {
   const isUser = message.role === 'user';
 
   return (
-    <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+    <div id={message.id} data-message-id={message.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
       <span
         className={`text-[10px] font-mono uppercase tracking-widest mb-1 px-1 ${
           isUser ? 'text-ink/40' : 'text-botanical-500'
